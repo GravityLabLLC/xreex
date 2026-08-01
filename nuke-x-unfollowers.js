@@ -1,8 +1,7 @@
 (() => {
   const CONFIG = {
     maxUnfollows: 2500,          // Maximum unfollows per run
-    minDelay: 5000,              // Minimum ms between unfollows
-    maxDelay: 12000,             // Maximum ms between unfollows (random)
+    actionInterval: 1000,        // Target one unfollow per second
     scrollDelay: 3000,           // Wait after scrolling
     maxNoProgress: 12,           // Stop if nothing happens for this many cycles
     confirmWait: 800             // Wait for the confirmation dialog
@@ -13,7 +12,6 @@
   let running = true;
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
   const log = (msg) => console.log(`[Unfollow] ${msg}`);
 
   // Find the confirmation "Unfollow" button in the modal
@@ -71,7 +69,7 @@
 
   async function mainLoop() {
     log('Starting non-follower unfollow script.');
-    log(`Max this run: ${CONFIG.maxUnfollows} | Delays: ${CONFIG.minDelay/1000}–${CONFIG.maxDelay/1000}s`);
+    log(`Max this run: ${CONFIG.maxUnfollows} | Target pace: 1 unfollow/s`);
     log('To stop early → type:  window.stopUnfollow = true');
 
     while (running && unfollowed < CONFIG.maxUnfollows) {
@@ -86,15 +84,16 @@
       for (const cell of cells) {
         if (!running || unfollowed >= CONFIG.maxUnfollows) break;
 
+        const actionStartedAt = Date.now();
         const success = await processCell(cell);
         if (success) {
           actionTaken = true;
           noProgress = 0;
 
-          // Random human-like delay
-          const delay = rand(CONFIG.minDelay, CONFIG.maxDelay);
-          log(`Waiting ${(delay/1000).toFixed(1)}s...`);
-          await sleep(delay);
+          // Include the confirmation wait in the one-second action interval
+          const elapsed = Date.now() - actionStartedAt;
+          const remainingDelay = Math.max(0, CONFIG.actionInterval - elapsed);
+          await sleep(remainingDelay);
         }
       }
 

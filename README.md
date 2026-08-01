@@ -9,6 +9,8 @@ Browser-console scripts for removing likes and unfollowing accounts that do not 
 3. Paste and run [nuke-x-likes.js](./nuke-x-likes.js).
 4. Keep the tab open and visible until it finishes.
 
+The script targets one unlike per second.
+
 <details>
 <summary>View code</summary>
 
@@ -16,11 +18,8 @@ Browser-console scripts for removing likes and unfollowing accounts that do not 
 (() => {
   const CONFIG = {
     maxUnlikes: 999999,          // safety limit (set lower if you want)
-    baseDelay: 1800,             // ms between each unlike (increase if you get rate-limited)
-    jitter: 800,                 // random extra delay
+    actionInterval: 1000,        // target one unlike per second
     scrollDelay: 2500,           // wait after scrolling
-    batchPauseEvery: 40,         // pause every N unlikes
-    batchPauseMs: 12000,         // longer pause duration
     maxNoProgress: 15            // stop if no new unlikes for this many cycles
   };
 
@@ -29,8 +28,6 @@ Browser-console scripts for removing likes and unfollowing accounts that do not 
   let running = true;
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
   const log = (msg) => console.log(`[Unlike] ${msg}`);
 
   async function clickUnlikeButtons() {
@@ -59,14 +56,8 @@ Browser-console scripts for removing likes and unfollowing accounts that do not 
           clickedThisRound++;
           log(`Unliked #${unliked}`);
 
-          // Random delay between clicks
-          await sleep(CONFIG.baseDelay + rand(0, CONFIG.jitter));
-
-          // Occasional longer pause to reduce rate-limit risk
-          if (unliked % CONFIG.batchPauseEvery === 0) {
-            log(`Batch pause (${CONFIG.batchPauseMs / 1000}s)...`);
-            await sleep(CONFIG.batchPauseMs);
-          }
+          // Target one unlike per second
+          await sleep(CONFIG.actionInterval);
         }
       } catch (e) {
         // ignore individual click errors
@@ -135,7 +126,7 @@ window.stopUnlikeScript();
 3. Paste and run [nuke-x-unfollowers.js](./nuke-x-unfollowers.js).
 4. Keep the tab open and visible until it finishes.
 
-The script skips accounts marked `Follows you`, waits 5 to 12 seconds between actions, and stops after 2,500 unfollows.
+The script skips accounts marked `Follows you`, targets one unfollow per second, and stops after 2,500 unfollows.
 
 <details>
 <summary>View code</summary>
@@ -144,8 +135,7 @@ The script skips accounts marked `Follows you`, waits 5 to 12 seconds between ac
 (() => {
   const CONFIG = {
     maxUnfollows: 2500,          // Maximum unfollows per run
-    minDelay: 5000,              // Minimum ms between unfollows
-    maxDelay: 12000,             // Maximum ms between unfollows (random)
+    actionInterval: 1000,        // Target one unfollow per second
     scrollDelay: 3000,           // Wait after scrolling
     maxNoProgress: 12,           // Stop if nothing happens for this many cycles
     confirmWait: 800             // Wait for the confirmation dialog
@@ -156,7 +146,6 @@ The script skips accounts marked `Follows you`, waits 5 to 12 seconds between ac
   let running = true;
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
   const log = (msg) => console.log(`[Unfollow] ${msg}`);
 
   // Find the confirmation "Unfollow" button in the modal
@@ -214,7 +203,7 @@ The script skips accounts marked `Follows you`, waits 5 to 12 seconds between ac
 
   async function mainLoop() {
     log('Starting non-follower unfollow script.');
-    log(`Max this run: ${CONFIG.maxUnfollows} | Delays: ${CONFIG.minDelay/1000}–${CONFIG.maxDelay/1000}s`);
+    log(`Max this run: ${CONFIG.maxUnfollows} | Target pace: 1 unfollow/s`);
     log('To stop early → type:  window.stopUnfollow = true');
 
     while (running && unfollowed < CONFIG.maxUnfollows) {
@@ -229,15 +218,16 @@ The script skips accounts marked `Follows you`, waits 5 to 12 seconds between ac
       for (const cell of cells) {
         if (!running || unfollowed >= CONFIG.maxUnfollows) break;
 
+        const actionStartedAt = Date.now();
         const success = await processCell(cell);
         if (success) {
           actionTaken = true;
           noProgress = 0;
 
-          // Random human-like delay
-          const delay = rand(CONFIG.minDelay, CONFIG.maxDelay);
-          log(`Waiting ${(delay/1000).toFixed(1)}s...`);
-          await sleep(delay);
+          // Include the confirmation wait in the one-second action interval
+          const elapsed = Date.now() - actionStartedAt;
+          const remainingDelay = Math.max(0, CONFIG.actionInterval - elapsed);
+          await sleep(remainingDelay);
         }
       }
 

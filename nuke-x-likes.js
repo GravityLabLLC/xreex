@@ -1,11 +1,8 @@
 (() => {
   const CONFIG = {
     maxUnlikes: 999999,          // safety limit (set lower if you want)
-    baseDelay: 1800,             // ms between each unlike (increase if you get rate-limited)
-    jitter: 800,                 // random extra delay
+    actionInterval: 1000,        // target one unlike per second
     scrollDelay: 2500,           // wait after scrolling
-    batchPauseEvery: 40,         // pause every N unlikes
-    batchPauseMs: 12000,         // longer pause duration
     maxNoProgress: 15            // stop if no new unlikes for this many cycles
   };
 
@@ -14,8 +11,6 @@
   let running = true;
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
   const log = (msg) => console.log(`[Unlike] ${msg}`);
 
   async function clickUnlikeButtons() {
@@ -44,14 +39,8 @@
           clickedThisRound++;
           log(`Unliked #${unliked}`);
 
-          // Random delay between clicks
-          await sleep(CONFIG.baseDelay + rand(0, CONFIG.jitter));
-
-          // Occasional longer pause to reduce rate-limit risk
-          if (unliked % CONFIG.batchPauseEvery === 0) {
-            log(`Batch pause (${CONFIG.batchPauseMs / 1000}s)...`);
-            await sleep(CONFIG.batchPauseMs);
-          }
+          // Target one unlike per second
+          await sleep(CONFIG.actionInterval);
         }
       } catch (e) {
         // ignore individual click errors

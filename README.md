@@ -1,6 +1,14 @@
 # X account cleanup scripts
 
-Browser-console scripts for removing likes and unfollowing accounts that do not follow you back.
+Browser-console scripts for nuking stale X-likes and Unfollowers.
+
+## Stale X Likes
+
+These are things you've liked in the past. They influence your account's shape and frequency and thus your algorithm. Use this script to obtain a reset.
+
+## Unfollowers
+
+These are people you follow who do not follow you back. Tired of interacting and never getting a follow back? Want to reset your account's breadth by limiting things to mutuals? Use this script to obtain a reset.
 
 ## Remove likes
 

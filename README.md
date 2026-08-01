@@ -136,3 +136,162 @@ window.stopUnlikeScript();
 ```
 
 Refresh your likes page when it finishes to confirm the result. 🌱
+
+---
+
+# 👋 Nuke Your Unfollowers
+
+Clean up your Following list by unfollowing accounts that do not follow you back. The script skips anyone marked **Follows you** and uses conservative randomized delays between actions.
+
+## 🚀 Run it
+
+1. Navigate to `https://x.com/YOUR_USERNAME/following` (replace `YOUR_USERNAME`).
+2. Open your browser's Developer Tools.
+3. Open the **Console**, paste the script below, and press **Enter**.
+4. Keep the tab open and visible until the script finishes.
+
+> [!NOTE]
+> The default configuration stops after 2,500 unfollows and waits 5–12 seconds between actions. Lower the limit or lengthen the delays if X begins rate limiting the account.
+
+<details>
+<summary>📜 View inline code · standalone script: <a href="./nuke-x-unfollowers.js"><code>nuke-x-unfollowers.js</code></a></summary>
+
+```javascript
+(() => {
+  const CONFIG = {
+    maxUnfollows: 2500,          // Maximum unfollows per run
+    minDelay: 5000,              // Minimum ms between unfollows
+    maxDelay: 12000,             // Maximum ms between unfollows (random)
+    scrollDelay: 3000,           // Wait after scrolling
+    maxNoProgress: 12,           // Stop if nothing happens for this many cycles
+    confirmWait: 800             // Wait for the confirmation dialog
+  };
+
+  let unfollowed = 0;
+  let noProgress = 0;
+  let running = true;
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const log = (msg) => console.log(`[Unfollow] ${msg}`);
+
+  // Find the confirmation "Unfollow" button in the modal
+  function getConfirmButton() {
+    // Primary modern selector
+    let btn = document.querySelector('[data-testid="confirmationSheetConfirm"]');
+    if (btn) return btn;
+
+    // Fallback: any button that says exactly "Unfollow"
+    btn = [...document.querySelectorAll('button, div[role="button"]')]
+      .find(el => el.textContent.trim().toLowerCase() === 'unfollow');
+    return btn || null;
+  }
+
+  async function processCell(cell) {
+    // Skip anyone who follows you back
+    if (cell.textContent.includes('Follows you')) {
+      return false;
+    }
+
+    // Find the "Following" button inside this user card
+    // Common current selectors
+    let followBtn = cell.querySelector('[data-testid$="-unfollow"]') ||
+                    cell.querySelector('[data-testid="unfollow"]') ||
+                    [...cell.querySelectorAll('button, div[role="button"]')]
+                      .find(b => {
+                        const text = (b.innerText || b.getAttribute('aria-label') || '').toLowerCase();
+                        return text.includes('following');
+                      });
+
+    if (!followBtn) return false;
+
+    try {
+      // Click "Following" → opens confirm dialog
+      followBtn.click();
+      await sleep(CONFIG.confirmWait);
+
+      const confirmBtn = getConfirmButton();
+      if (confirmBtn) {
+        confirmBtn.click();
+        unfollowed++;
+        log(`Unfollowed non-follower  (#${unfollowed})`);
+        return true;
+      } else {
+        log('Confirm button not found – skipping');
+        // Click somewhere safe or press Escape to close any open dialog
+        document.body.click();
+        return false;
+      }
+    } catch (e) {
+      log('Error on one user: ' + e.message);
+      return false;
+    }
+  }
+
+  async function mainLoop() {
+    log('Starting non-follower unfollow script.');
+    log(`Max this run: ${CONFIG.maxUnfollows} | Delays: ${CONFIG.minDelay/1000}–${CONFIG.maxDelay/1000}s`);
+    log('To stop early → type:  window.stopUnfollow = true');
+
+    while (running && unfollowed < CONFIG.maxUnfollows) {
+      if (window.stopUnfollow) {
+        log('Stopped by user.');
+        break;
+      }
+
+      const cells = [...document.querySelectorAll('[data-testid="UserCell"]')];
+      let actionTaken = false;
+
+      for (const cell of cells) {
+        if (!running || unfollowed >= CONFIG.maxUnfollows) break;
+
+        const success = await processCell(cell);
+        if (success) {
+          actionTaken = true;
+          noProgress = 0;
+
+          // Random human-like delay
+          const delay = rand(CONFIG.minDelay, CONFIG.maxDelay);
+          log(`Waiting ${(delay/1000).toFixed(1)}s...`);
+          await sleep(delay);
+        }
+      }
+
+      if (!actionTaken) {
+        noProgress++;
+        log(`No actionable users found (${noProgress}/${CONFIG.maxNoProgress}). Scrolling...`);
+        window.scrollTo(0, document.body.scrollHeight);
+        await sleep(CONFIG.scrollDelay);
+      }
+
+      if (noProgress >= CONFIG.maxNoProgress) {
+        log('No more non-followers loading. Finished (or reached the end of loaded list).');
+        break;
+      }
+    }
+
+    log(`Done. Total unfollowed this session: ${unfollowed}`);
+    log('Refresh the page to see the updated Following count.');
+  }
+
+  // Global stop control
+  window.stopUnfollow = false;
+  window.stopUnfollowScript = () => { window.stopUnfollow = true; };
+
+  mainLoop();
+})();
+```
+
+</details>
+
+## 🛑 Stop early
+
+Run either command in the console:
+
+```javascript
+window.stopUnfollow = true;
+// or
+window.stopUnfollowScript();
+```
+
+Refresh the page when it finishes to see your updated Following count. 🌱

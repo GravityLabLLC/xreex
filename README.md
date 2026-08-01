@@ -1,19 +1,16 @@
-# 💥 Nuke Your X Likes
+# X account cleanup scripts
 
-Prune your account for a fresh algorithm by nuking your X likes. This creates a clean likes state so you can move forward with more intentionality. ✨
+Browser-console scripts for removing likes and unfollowing accounts that do not follow you back.
 
-## 🚀 Run it
+## Remove likes
 
-1. Navigate to `https://x.com/YOUR_USERNAME/likes` (replace `YOUR_USERNAME`).
-2. Open your browser's Developer Tools.
-3. Open the **Console**, paste the script below, and press **Enter**.
-4. Keep the tab open and visible until the script finishes.
-
-> [!NOTE]
-> The default configuration is intentionally conservative to reduce throttling. Large like histories may take a long time to clear.
+1. Open `https://x.com/YOUR_USERNAME/likes`.
+2. Open the browser developer console.
+3. Paste and run [nuke-x-likes.js](./nuke-x-likes.js).
+4. Keep the tab open and visible until it finishes.
 
 <details>
-<summary>📜 View inline code · standalone script: <a href="./nuke-x-likes.js"><code>nuke-x-likes.js</code></a></summary>
+<summary>View code</summary>
 
 ```javascript
 (() => {
@@ -125,36 +122,23 @@ Prune your account for a fresh algorithm by nuking your X likes. This creates a 
 
 </details>
 
-## 🛑 Stop early
-
-Run either command in the console:
+To stop early:
 
 ```javascript
-window.stopUnlike = true;
-// or
 window.stopUnlikeScript();
 ```
 
-Refresh your likes page when it finishes to confirm the result. 🌱
+## Unfollow non-followers
 
----
+1. Open `https://x.com/YOUR_USERNAME/following`.
+2. Open the browser developer console.
+3. Paste and run [nuke-x-unfollowers.js](./nuke-x-unfollowers.js).
+4. Keep the tab open and visible until it finishes.
 
-# 👋 Nuke Your Unfollowers
-
-Clean up your Following list by unfollowing accounts that do not follow you back. The script skips anyone marked **Follows you** and uses conservative randomized delays between actions.
-
-## 🚀 Run it
-
-1. Navigate to `https://x.com/YOUR_USERNAME/following` (replace `YOUR_USERNAME`).
-2. Open your browser's Developer Tools.
-3. Open the **Console**, paste the script below, and press **Enter**.
-4. Keep the tab open and visible until the script finishes.
-
-> [!NOTE]
-> The default configuration stops after 2,500 unfollows and waits 5–12 seconds between actions. Lower the limit or lengthen the delays if X begins rate limiting the account.
+The script skips accounts marked `Follows you`, waits 5 to 12 seconds between actions, and stops after 2,500 unfollows.
 
 <details>
-<summary>📜 View inline code · standalone script: <a href="./nuke-x-unfollowers.js"><code>nuke-x-unfollowers.js</code></a></summary>
+<summary>View code</summary>
 
 ```javascript
 (() => {
@@ -284,14 +268,10 @@ Clean up your Following list by unfollowing accounts that do not follow you back
 
 </details>
 
-## 🛑 Stop early
-
-Run either command in the console:
+To stop early:
 
 ```javascript
-window.stopUnfollow = true;
-// or
 window.stopUnfollowScript();
 ```
 
-Refresh the page when it finishes to see your updated Following count. 🌱
+Review each script before running it. X may rate-limit large batches.

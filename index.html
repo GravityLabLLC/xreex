@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browser-console utilities for clearing X likes and unfollowing non-followers or accounts with OnlyFans and promotional bio keywords.">
+  <title>Nuke Your X — Likes, Unfollowers &amp; Promo Accounts</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-color: #0e0e0e;
+      --surface-color: #171717;
+      --surface-strong: #202020;
+      --text-color: #e0e0e0;
+      --accent-color: #00ffcc;
+      --link-color: #00bfff;
+      --subtle-color: #a0a0a0;
+      --border-color: rgba(0, 255, 204, 0.24);
+      --shadow-color: rgba(0, 255, 204, 0.12);
+      --code-color: #d9fff7;
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg-color: #ffffff;
+      --surface-color: #f3f7f6;
+      --surface-strong: #e6f0ee;
+      --text-color: #111111;
+      --accent-color: #00695c;
+      --link-color: #0066cc;
+      --subtle-color: #555555;
+      --border-color: rgba(0, 105, 92, 0.26);
+      --shadow-color: rgba(0, 105, 92, 0.1);
+      --code-color: #103b34;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px;
+      background:
+        radial-gradient(circle at 12% 18%, var(--shadow-color) 0 1px, transparent 2px),
+        radial-gradient(circle at 78% 8%, var(--shadow-color) 0 1px, transparent 2px),
+        radial-gradient(circle at 88% 72%, var(--shadow-color) 0 1px, transparent 2px),
+        var(--bg-color);
+      background-size: 92px 92px, 128px 128px, 156px 156px, auto;
+      color: var(--text-color);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.65;
+      transition: background-color 0.5s, color 0.5s;
+    }
+
+    main {
+      width: min(100%, 900px);
+      margin: 0 auto;
+    }
+
+    h1,
+    h2 {
+      color: var(--accent-color);
+      text-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color);
+    }
+
+    h1 {
+      max-width: 740px;
+      margin: 0 0 12px;
+      font-size: clamp(2.2rem, 7vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.35rem, 4vw, 1.85rem);
+      line-height: 1.2;
+    }
+
+    p,
+    li {
+      font-size: 1.02rem;
+    }
+
+    a {
+      color: var(--link-color);
+      text-decoration: none;
+      text-shadow: 0 0 3px var(--link-color);
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--link-color);
+      outline-offset: 4px;
+    }
+
+    code,
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    code {
+      color: var(--code-color);
+    }
+
+    :not(pre) > code {
+      padding: 0.12em 0.35em;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--surface-color);
+      font-size: 0.92em;
+    }
+
+    .hero {
+      min-height: 66vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 72px 0 56px;
+      animation: fade-in 0.9s ease both;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--subtle-color);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 700px;
+      margin: 14px 0 0;
+      color: var(--subtle-color);
+      font-size: clamp(1.08rem, 2.5vw, 1.3rem);
+    }
+
+    .hero-link {
+      padding: 10px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--surface-color);
+      box-shadow: 0 0 12px var(--shadow-color);
+      font-weight: 700;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .section {
+      margin-bottom: 48px;
+      animation: fade-in 0.9s ease both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 28%;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 1.35rem;
+    }
+
+    .steps li {
+      margin-bottom: 9px;
+      padding-left: 6px;
+    }
+
+    .note {
+      margin-top: 24px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent-color);
+      background: var(--surface-color);
+      color: var(--subtle-color);
+      box-shadow: 0 0 12px var(--shadow-color);
+    }
+
+    .note strong {
+      color: var(--accent-color);
+    }
+
+    details {
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--surface-color);
+      box-shadow: 0 0 16px var(--shadow-color);
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 16px 18px;
+      color: var(--accent-color);
+      font-weight: 700;
+      list-style-position: inside;
+    }
+
+    summary:hover {
+      background: var(--surface-strong);
+    }
+
+    .code-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      color: var(--subtle-color);
+      font-size: 0.84rem;
+    }
+
+    button {
+      border: 0;
+      border-radius: 4px;
+      background: var(--accent-color);
+      color: #000000;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    .copy-button {
+      min-width: 96px;
+      padding: 7px 11px;
+    }
+
+    pre {
+      max-height: 70vh;
+      margin: 0;
+      padding: 20px;
+      overflow: auto;
+      background: #090b0b;
+      color: #d9fff7;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      tab-size: 2;
+    }
+
+    .stop-code {
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      margin: 18px 0 0;
+      padding: 14px 16px;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--surface-color);
+      box-shadow: 0 0 10px var(--shadow-color);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      z-index: 2;
+      top: 16px;
+      right: 16px;
+      padding: 8px 12px;
+    }
+
+    footer {
+      padding: 8px 0 36px;
+      color: var(--subtle-color);
+      font-size: 0.88rem;
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px 16px 36px;
+      }
+
+      .theme-toggle {
+        position: sticky;
+        top: 8px;
+        float: right;
+        margin-bottom: 8px;
+      }
+
+      .hero {
+        min-height: 70vh;
+        padding-top: 96px;
+        clear: both;
+      }
+
+      .code-toolbar {
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .copy-button {
+        min-width: auto;
+      }
+
+      pre {
+        padding: 16px;
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">Toggle Theme</button>
+
+  <main>
+    <header class="hero">
+      <p class="eyebrow">A clean slate for your feed</p>
+      <h1>💥 Nuke Your X</h1>
+      <p class="lede">Clear your old likes, clean up accounts that do not follow you back, or remove accounts with OnlyFans and promotional bio keywords. ✨</p>
+      <nav class="hero-actions" aria-label="Choose a workflow">
+        <a class="hero-link" href="#nuke-likes">Nuke likes ↓</a>
+        <a class="hero-link" href="#nuke-unfollowers">Nuke unfollowers ↓</a>
+        <a class="hero-link" href="#nuke-onlyfans-models">Nuke OnlyFans models ↓</a>
+      </nav>
+    </header>
+
+    <section class="section" id="nuke-likes">
+      <p class="eyebrow">Workflow 01</p>
+      <h2>💥 Nuke Your Likes</h2>
+      <p>Prune your account for a fresh algorithm by clearing your X likes.</p>
+      <ol class="steps">
+        <li>Navigate to <code>https://x.com/YOUR_USERNAME/likes</code> and replace <code>YOUR_USERNAME</code>.</li>
+        <li>Open your browser's Developer Tools.</li>
+        <li>Open the <strong>Console</strong>, paste the script below, and press <strong>Enter</strong>.</li>
+        <li>Keep the tab open and visible until the script finishes.</li>
+      </ol>
+
+      <aside class="note">
+        <strong>Note:</strong> The default configuration targets one unlike per second. X may throttle large batches.
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="likes-script-heading">
+      <h2 id="likes-script-heading">📜 Likes script</h2>
+      <details open>
+        <summary>View inline code</summary>
+        <div class="code-toolbar">
+          <a href="./nuke-x-likes.js">Open standalone script</a>
+          <button class="copy-button" type="button" data-source="likes-source" data-target="likes-visible-source">Copy script</button>
+        </div>
+        <pre><code id="likes-visible-source"></code></pre>
+      </details>
+    </section>
+
+    <section class="section" id="stop-early">
+      <h2>🛑 Stop early</h2>
+      <p>Run either command in the console:</p>
+      <code class="stop-code">window.stopUnlike = true;<br>// or<br>window.stopUnlikeScript();</code>
+      <p>Refresh your likes page when it finishes to confirm the result. 🌱</p>
+    </section>
+
+    <section class="section" id="nuke-unfollowers">
+      <p class="eyebrow">Workflow 02</p>
+      <h2>👋 Nuke Your Unfollowers</h2>
+      <p>Clean up your Following list by unfollowing accounts that do not follow you back. Anyone marked <strong>Follows you</strong> is skipped.</p>
+      <ol class="steps">
+        <li>Navigate to <code>https://x.com/YOUR_USERNAME/following</code> and replace <code>YOUR_USERNAME</code>.</li>
+        <li>Open your browser's Developer Tools.</li>
+        <li>Open the <strong>Console</strong>, paste the script below, and press <strong>Enter</strong>.</li>
+        <li>Keep the tab open and visible until the script finishes.</li>
+      </ol>
+
+      <aside class="note">
+        <strong>Note:</strong> The script stops after 2,500 unfollows and targets one unfollow per second. Increase the action interval if X begins rate limiting the account.
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="unfollowers-script-heading">
+      <h2 id="unfollowers-script-heading">📜 Unfollowers script</h2>
+      <details open>
+        <summary>View inline code</summary>
+        <div class="code-toolbar">
+          <a href="./nuke-x-unfollowers.js">Open standalone script</a>
+          <button class="copy-button" type="button" data-source="unfollowers-source" data-target="unfollowers-visible-source">Copy script</button>
+        </div>
+        <pre><code id="unfollowers-visible-source"></code></pre>
+      </details>
+    </section>
+
+    <section class="section" id="stop-unfollowing">
+      <h2>🛑 Stop early</h2>
+      <p>Run either command in the console:</p>
+      <code class="stop-code">window.stopUnfollow = true;<br>// or<br>window.stopUnfollowScript();</code>
+      <p>Refresh the page when it finishes to see your updated Following count. 🌱</p>
+    </section>
+
+    <section class="section" id="nuke-onlyfans-models">
+      <p class="eyebrow">Workflow 03</p>
+      <h2>🎯 Nuking OnlyFans Models</h2>
+      <p>Scan your Following list and unfollow accounts whose visible profile text matches OnlyFans, adult-content, link-in-bio, or Instagram-promotion keywords.</p>
+      <ol class="steps">
+        <li>Navigate to <code>https://x.com/YOUR_USERNAME/following</code> and replace <code>YOUR_USERNAME</code>.</li>
+        <li>Open your browser's Developer Tools.</li>
+        <li>Open the <strong>Console</strong>, paste the script below, and press <strong>Enter</strong>.</li>
+        <li>Keep the tab open and visible until the script finishes.</li>
+      </ol>
+
+      <aside class="note">
+        <strong>Review the keyword list first:</strong> Broad terms such as <code>link in bio</code>, <code>18+</code>, and Instagram references can match unrelated accounts. By default, the script can also unfollow accounts that follow you back, waits 6–14 seconds between actions, and stops after 60 unfollows.
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="onlyfans-script-heading">
+      <h2 id="onlyfans-script-heading">📜 OnlyFans models script</h2>
+      <details open>
+        <summary>View inline code</summary>
+        <div class="code-toolbar">
+          <a href="./nuke-x-onlyfans-models.js">Open standalone script</a>
+          <button class="copy-button" type="button" data-source="onlyfans-source" data-target="onlyfans-visible-source">Copy script</button>
+        </div>
+        <pre><code id="onlyfans-visible-source"></code></pre>
+      </details>
+    </section>
+
+    <section class="section" id="stop-onlyfans-unfollowing">
+      <h2>🛑 Stop early</h2>
+      <p>Run this command in the console:</p>
+      <code class="stop-code">stopUnfollow = true;</code>
+      <p>Refresh the page when it finishes to see your updated Following list. 🌱</p>
+    </section>
+
+    <footer>
+      Runs entirely in your browser. Review the script before pasting it into the console.
+    </footer>
+  </main>
+
+  <script type="text/plain" id="likes-source">(() => {
+  const CONFIG = {
+    maxUnlikes: 999999,          // safety limit (set lower if you want)
+    actionInterval: 1000,        // target one unlike per second
+    scrollDelay: 2500,           // wait after scrolling
+    maxNoProgress: 15            // stop if no new unlikes for this many cycles
+  };
+
+  let unliked = 0;
+  let noProgressCount = 0;
+  let running = true;
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const log = (msg) => console.log(`[Unlike] ${msg}`);
+
+  async function clickUnlikeButtons() {
+    // Current X selectors for the unlike (filled heart) button
+    const buttons = [
+      ...document.querySelectorAll('div[data-testid="unlike"]'),
+      ...document.querySelectorAll('button[data-testid="unlike"]'),
+      ...document.querySelectorAll('[aria-label*="Unlike"]')
+    ];
+
+    // Deduplicate
+    const unique = [...new Set(buttons)];
+
+    let clickedThisRound = 0;
+
+    for (const btn of unique) {
+      if (!running || unliked >= CONFIG.maxUnlikes) break;
+
+      try {
+        // Only click if it still looks like a liked state
+        if (btn.getAttribute('data-testid') === 'unlike' ||
+            (btn.getAttribute('aria-label') || '').toLowerCase().includes('unlike')) {
+
+          btn.click();
+          unliked++;
+          clickedThisRound++;
+          log(`Unliked #${unliked}`);
+
+          // Target one unlike per second
+          await sleep(CONFIG.actionInterval);
+        }
+      } catch (e) {
+        // ignore individual click errors
+      }
+    }
+
+    return clickedThisRound;
+  }
+
+  async function scrollDown() {
+    window.scrollTo(0, document.body.scrollHeight);
+    await sleep(CONFIG.scrollDelay);
+  }
+
+  async function mainLoop() {
+    log('Starting bulk unlike. Keep this tab open and visible.');
+    log('To stop early, type:  window.stopUnlike = true');
+
+    while (running && unliked < CONFIG.maxUnlikes) {
+      if (window.stopUnlike) {
+        log('Stopped by user.');
+        break;
+      }
+
+      const clicked = await clickUnlikeButtons();
+
+      if (clicked === 0) {
+        noProgressCount++;
+        log(`No buttons found (${noProgressCount}/${CONFIG.maxNoProgress}). Scrolling...`);
+      } else {
+        noProgressCount = 0;
+      }
+
+      if (noProgressCount >= CONFIG.maxNoProgress) {
+        log('No more likes loading. Finished or reached the end.');
+        break;
+      }
+
+      await scrollDown();
+    }
+
+    log(`Done. Total unliked this session: ${unliked}`);
+    log('Refresh the page to confirm.');
+  }
+
+  // Expose stop function
+  window.stopUnlike = false;
+  window.stopUnlikeScript = () => { window.stopUnlike = true; };
+
+  mainLoop();
+})();</script>
+
+  <script type="text/plain" id="unfollowers-source">(() => {
+  const CONFIG = {
+    maxUnfollows: 2500,          // Maximum unfollows per run
+    actionInterval: 1000,        // Target one unfollow per second
+    scrollDelay: 3000,           // Wait after scrolling
+    maxNoProgress: 12,           // Stop if nothing happens for this many cycles
+    confirmWait: 800             // Wait for the confirmation dialog
+  };
+
+  let unfollowed = 0;
+  let noProgress = 0;
+  let running = true;
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const log = (msg) => console.log(`[Unfollow] ${msg}`);
+
+  // Find the confirmation "Unfollow" button in the modal
+  function getConfirmButton() {
+    // Primary modern selector
+    let btn = document.querySelector('[data-testid="confirmationSheetConfirm"]');
+    if (btn) return btn;
+
+    // Fallback: any button that says exactly "Unfollow"
+    btn = [...document.querySelectorAll('button, div[role="button"]')]
+      .find(el => el.textContent.trim().toLowerCase() === 'unfollow');
+    return btn || null;
+  }
+
+  async function processCell(cell) {
+    // Skip anyone who follows you back
+    if (cell.textContent.includes('Follows you')) {
+      return false;
+    }
+
+    // Find the "Following" button inside this user card
+    // Common current selectors
+    let followBtn = cell.querySelector('[data-testid$="-unfollow"]') ||
+                    cell.querySelector('[data-testid="unfollow"]') ||
+                    [...cell.querySelectorAll('button, div[role="button"]')]
+                      .find(b => {
+                        const text = (b.innerText || b.getAttribute('aria-label') || '').toLowerCase();
+                        return text.includes('following');
+                      });
+
+    if (!followBtn) return false;
+
+    try {
+      // Click "Following" → opens confirm dialog
+      followBtn.click();
+      await sleep(CONFIG.confirmWait);
+
+      const confirmBtn = getConfirmButton();
+      if (confirmBtn) {
+        confirmBtn.click();
+        unfollowed++;
+        log(`Unfollowed non-follower  (#${unfollowed})`);
+        return true;
+      } else {
+        log('Confirm button not found – skipping');
+        // Click somewhere safe or press Escape to close any open dialog
+        document.body.click();
+        return false;
+      }
+    } catch (e) {
+      log('Error on one user: ' + e.message);
+      return false;
+    }
+  }
+
+  async function mainLoop() {
+    log('Starting non-follower unfollow script.');
+    log(`Max this run: ${CONFIG.maxUnfollows} | Target pace: 1 unfollow/s`);
+    log('To stop early → type:  window.stopUnfollow = true');
+
+    while (running && unfollowed < CONFIG.maxUnfollows) {
+      if (window.stopUnfollow) {
+        log('Stopped by user.');
+        break;
+      }
+
+      const cells = [...document.querySelectorAll('[data-testid="UserCell"]')];
+      let actionTaken = false;
+
+      for (const cell of cells) {
+        if (!running || unfollowed >= CONFIG.maxUnfollows) break;
+
+        const actionStartedAt = Date.now();
+        const success = await processCell(cell);
+        if (success) {
+          actionTaken = true;
+          noProgress = 0;
+
+          // Include the confirmation wait in the one-second action interval
+          const elapsed = Date.now() - actionStartedAt;
+          const remainingDelay = Math.max(0, CONFIG.actionInterval - elapsed);
+          await sleep(remainingDelay);
+        }
+      }
+
+      if (!actionTaken) {
+        noProgress++;
+        log(`No actionable users found (${noProgress}/${CONFIG.maxNoProgress}). Scrolling...`);
+        window.scrollTo(0, document.body.scrollHeight);
+        await sleep(CONFIG.scrollDelay);
+      }
+
+      if (noProgress >= CONFIG.maxNoProgress) {
+        log('No more non-followers loading. Finished (or reached the end of loaded list).');
+        break;
+      }
+    }
+
+    log(`Done. Total unfollowed this session: ${unfollowed}`);
+    log('Refresh the page to see the updated Following count.');
+  }
+
+  // Global stop control
+  window.stopUnfollow = false;
+  window.stopUnfollowScript = () => { window.stopUnfollow = true; };
+
+  mainLoop();
+})();</script>
+
+  <script type="text/plain" id="onlyfans-source">(() => {
+  // ========== CONFIG ==========
+  const CONFIG = {
+    maxUnfollows: 60,          // Safe limit per run
+    minDelay: 6000,            // 6–14 seconds between unfollows
+    maxDelay: 14000,
+    scrollDelay: 3000,
+    maxNoProgress: 15,
+    requireNotFollowingBack: false  // true = only unfollow if they don't follow you
+  };
+
+  // Keyword list (case-insensitive). Edit freely.
+  const KEYWORDS = [
+    // Direct OnlyFans / Fansly etc.
+    "onlyfans", "only fans", "onlyfans.com", "fansly", "fanvue", "loyalfans",
+    "of.com", "o.f.", "o/f",
+
+    // Common promo language
+    "link in bio", "linkinbio", "link tree", "linktree", "allmylinks",
+    "beacons.ai", "beacons", "spicy content", "exclusive content",
+    "premium content", "18+", "nsfw", "adult content", "subscribe for",
+
+    // Soft / emoji-heavy signals often used by these accounts
+    "🔥 link", "🍑", "🍆", "content creator 🔞", "🔞", "vip content",
+    "custom content", "dick rating", "sexting", "menu in bio",
+
+    // Instagram promo patterns
+    "ig:", "instagram:", "insta:", "my ig", "follow my ig"
+  ];
+
+  // ========== SCRIPT ==========
+  let unfollowed = 0;
+  let noProgress = 0;
+  let running = true;
+  const startTime = Date.now();
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  function formatElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  }
+
+  function log(msg, type = "info") {
+    const elapsed = formatElapsed(Date.now() - startTime);
+    const rate = (Date.now() - startTime) > 0
+      ? (unfollowed / ((Date.now() - startTime) / 60000)).toFixed(1)
+      : "0.0";
+
+    const icons = {
+      info: "💙", success: "✅", wait: "⏳", scroll: "📜",
+      warn: "⚠️", done: "🎉", match: "🎯"
+    };
+
+    console.log(`${icons[type] || "💙"} ${msg}  |  ⏱️ ${elapsed}  |  🚫 ${unfollowed} unfollowed  |  📈 ${rate}/min`);
+  }
+
+  function getConfirmButton() {
+    return document.querySelector('[data-testid="confirmationSheetConfirm"]') ||
+           [...document.querySelectorAll('button, div[role="button"]')]
+             .find(b => b.textContent.trim().toLowerCase() === "unfollow");
+  }
+
+  function matchesKeywords(text) {
+    const lower = text.toLowerCase();
+    return KEYWORDS.some(kw => lower.includes(kw.toLowerCase()));
+  }
+
+  async function processCell(cell) {
+    const text = cell.textContent || "";
+
+    // Optional: skip mutuals
+    if (CONFIG.requireNotFollowingBack && text.includes("Follows you")) {
+      return false;
+    }
+
+    if (!matchesKeywords(text)) return false;
+
+    // Find the Following button
+    let btn = cell.querySelector('[data-testid$="-unfollow"]') ||
+              cell.querySelector('[data-testid="unfollow"]') ||
+              [...cell.querySelectorAll('button, div[role="button"]')]
+                .find(b => (b.innerText || b.getAttribute("aria-label") || "").toLowerCase().includes("following"));
+
+    if (!btn) return false;
+
+    try {
+      btn.click();
+      await sleep(700);
+
+      const confirm = getConfirmButton();
+      if (confirm) {
+        confirm.click();
+        unfollowed++;
+        log(`Matched & unfollowed → ${text.slice(0, 60).replace(/\n/g, " ")}...`, "match");
+        return true;
+      } else {
+        document.body.click(); // close any dialog
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function main() {
+    console.clear();
+    console.log("%c🎯 OnlyFans / Promo Bio Unfollow Script", "font-size:16px; font-weight:bold; color:#ff6b6b");
+    log("Started. Scanning visible bios for keywords...");
+    console.log("🛑 Stop anytime → type: stopUnfollow = true");
+    console.log("─".repeat(60));
+
+    this.stopUnfollow = false;
+
+    while (running && unfollowed < CONFIG.maxUnfollows) {
+      if (this.stopUnfollow) {
+        log("Stopped by user", "warn");
+        break;
+      }
+
+      const cells = [...document.querySelectorAll('[data-testid="UserCell"]')];
+      let action = false;
+
+      for (const cell of cells) {
+        if (!running || unfollowed >= CONFIG.maxUnfollows || this.stopUnfollow) break;
+
+        const success = await processCell(cell);
+        if (success) {
+          action = true;
+          noProgress = 0;
+          const delay = rand(CONFIG.minDelay, CONFIG.maxDelay);
+          log(`Waiting ${(delay / 1000).toFixed(1)}s...`, "wait");
+          await sleep(delay);
+        }
+      }
+
+      if (!action) {
+        noProgress++;
+        log(`No matches in view (${noProgress}/${CONFIG.maxNoProgress}) → scrolling`, "scroll");
+        document.documentElement.scrollTop = document.documentElement.scrollHeight;
+        document.body.scrollTop = document.body.scrollHeight;
+        await sleep(CONFIG.scrollDelay);
+      }
+
+      if (noProgress >= CONFIG.maxNoProgress) {
+        log("No more matches found. Done!", "done");
+        break;
+      }
+    }
+
+    console.log("─".repeat(60));
+    const elapsed = formatElapsed(Date.now() - startTime);
+    console.log("%c🎉 Finished!", "font-size:16px; font-weight:bold; color:#17BF63");
+    console.log(`🚫  Total unfollowed : ${unfollowed}`);
+    console.log(`⏱️  Time elapsed     : ${elapsed}`);
+    console.log("Refresh the page to see the updated list.");
+  }
+
+  main();
+})();</script>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.getElementById("theme-toggle");
+
+    document.querySelectorAll(".copy-button").forEach((copyButton) => {
+      const source = document.getElementById(copyButton.dataset.source).textContent.trim();
+      const visibleSource = document.getElementById(copyButton.dataset.target);
+      visibleSource.textContent = source;
+
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(source);
+          copyButton.textContent = "Copied!";
+        } catch {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(visibleSource);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          copyButton.textContent = "Select + copy";
+        }
+
+        window.setTimeout(() => {
+          copyButton.textContent = "Copy script";
+        }, 1800);
+      });
+    });
+
+    themeToggle.addEventListener("click", () => {
+      const isLight = root.dataset.theme === "light";
+      root.dataset.theme = isLight ? "dark" : "light";
+      themeToggle.setAttribute("aria-label", isLight ? "Switch to light theme" : "Switch to dark theme");
+    });
+  </script>
+</body>
+</html>

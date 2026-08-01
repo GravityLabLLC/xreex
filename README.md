@@ -1,6 +1,6 @@
 # X account cleanup scripts
 
-Browser-console scripts for nuking stale X-likes and Unfollowers.
+Browser-console scripts for nuking stale X likes, unfollowers, and accounts matching OnlyFans or promotional bio keywords.
 
 ## Stale X Likes
 
@@ -10,7 +10,11 @@ These are things you've liked in the past. They influence your account's shape a
 
 These are people you follow who do not follow you back. Tired of interacting and never getting a follow back? Want to reset your account's breadth by limiting things to mutuals? Use this script to obtain a reset.
 
-## Remove likes
+## OnlyFans models
+
+Use [nuke-x-onlyfans-models.js](./nuke-x-onlyfans-models.js) on your X Following page to unfollow accounts whose visible profile text matches the configurable OnlyFans and promotional keyword list. Review the keywords before running it: broad phrases such as `link in bio` and Instagram references can match unrelated accounts.
+
+## Nuking Stale X-likes
 
 1. Open `https://x.com/YOUR_USERNAME/likes`.
 2. Open the browser developer console.
@@ -127,7 +131,7 @@ To stop early:
 window.stopUnlikeScript();
 ```
 
-## Unfollow non-followers
+## Nuking X Unfollowers
 
 1. Open `https://x.com/YOUR_USERNAME/following`.
 2. Open the browser developer console.

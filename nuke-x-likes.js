@@ -1,16 +1,16 @@
 (() => {
   const CONFIG = {
-    maxUnlikes: 999999,          // Safety limit
-    minDelay: 850,               // Fastest end of the range (ms)
-    maxDelay: 1300,              // Slowest end of the range (ms)
+    maxUnlikes: 999999,
+    minDelay: 850,               // ~1 unlike per second target
+    maxDelay: 1300,
     scrollDelay: 2200,
-    batchPauseEvery: 45,         // Longer pause every N unlikes
+    batchPauseEvery: 45,
     batchPauseMs: 9000,
-    maxNoProgress: 16
+    // No maxNoProgress limit — it will keep scrolling forever
   };
 
   let unliked = 0;
-  let noProgressCount = 0;
+  let consecutiveNoButtons = 0;
   let running = true;
   const startTime = Date.now();
 
@@ -33,26 +33,21 @@
     const ratePerMin = elapsed > 5000 ? (unliked / (elapsed / 60000)) : 0;
     const ratePerSec = ratePerMin / 60;
     const remaining = Math.max(0, CONFIG.maxUnlikes - unliked);
-    const etaMs = ratePerMin > 0 ? (remaining / ratePerMin) * 60000 : 0;
+    const etaMs = ratePerMin > 0.5 ? (remaining / ratePerMin) * 60000 : 0;
 
     return {
       elapsed: formatTime(elapsed),
       ratePerMin: ratePerMin.toFixed(1),
       ratePerSec: ratePerSec.toFixed(2),
-      eta: formatTime(etaMs)
+      eta: ratePerMin > 0.5 ? formatTime(etaMs) : "—"
     };
   }
 
   function log(msg, type = "info") {
     const { elapsed, ratePerMin, ratePerSec, eta } = getStats();
     const icons = {
-      info: "💙",
-      success: "✅",
-      wait: "⏳",
-      scroll: "📜",
-      warn: "⚠️",
-      done: "🎉",
-      eta: "🕒"
+      info: "💙", success: "✅", wait: "⏳", scroll: "📜",
+      warn: "⚠️", done: "🎉"
     };
 
     console.log(
@@ -68,7 +63,7 @@
     ];
 
     const unique = [...new Set(buttons)];
-    let clickedThisRound = 0;
+    let clicked = 0;
 
     for (const btn of unique) {
       if (!running || unliked >= CONFIG.maxUnlikes) break;
@@ -80,22 +75,21 @@
         if (isUnlike) {
           btn.click();
           unliked++;
-          clickedThisRound++;
+          clicked++;
+          consecutiveNoButtons = 0;          // reset counter
           log(`Unliked #${unliked}`, "success");
 
-          // Aggressive but jittered delay (targets ~0.9–1.1 unlikes/sec average)
           await sleep(rand(CONFIG.minDelay, CONFIG.maxDelay));
 
-          // Occasional longer pause to reduce throttling risk
           if (unliked % CONFIG.batchPauseEvery === 0) {
-            log(`Safety pause (${CONFIG.batchPauseMs / 1000}s) after ${unliked} unlikes`, "wait");
+            log(`Safety pause (${CONFIG.batchPauseMs / 1000}s)`, "wait");
             await sleep(CONFIG.batchPauseMs);
           }
         }
       } catch (e) {}
     }
 
-    return clickedThisRound;
+    return clicked;
   }
 
   async function scrollDown() {
@@ -106,12 +100,11 @@
 
   async function mainLoop() {
     console.clear();
-    console.log("%c🚀 Fast Bulk Unlike Script", "font-size:16px; font-weight:bold; color:#1DA1F2");
-    log("Started – targeting ~1 unlike/sec with anti-throttle jitter");
-    console.log("🛑 Stop early → type: stopUnlike = true");
+    console.log("%c🚀 Infinite Bulk Unlike Script", "font-size:16px; font-weight:bold; color:#1DA1F2");
+    log("Running indefinitely – will keep scrolling as long as needed");
+    console.log("🛑 Stop → type: stopUnlike = true");
     console.log("─".repeat(70));
 
-    // Safe stop flag
     this.stopUnlike = false;
 
     while (running && unliked < CONFIG.maxUnlikes) {
@@ -123,21 +116,16 @@
       const clicked = await clickUnlikeButtons();
 
       if (clicked === 0) {
-        noProgressCount++;
-        log(`No buttons found (${noProgressCount}/${CONFIG.maxNoProgress}) → scrolling`, "scroll");
-      } else {
-        noProgressCount = 0;
-      }
-
-      if (noProgressCount >= CONFIG.maxNoProgress) {
-        log("No more likes loading. Finished!", "done");
-        break;
+        consecutiveNoButtons++;
+        // Only log every few scrolls so the console doesn’t spam
+        if (consecutiveNoButtons === 1 || consecutiveNoButtons % 5 === 0) {
+          log(`No buttons found (scrolled ${consecutiveNoButtons}×) – continuing...`, "scroll");
+        }
       }
 
       await scrollDown();
     }
 
-    // Final summary
     console.log("─".repeat(70));
     const { elapsed, ratePerMin, ratePerSec } = getStats();
     console.log("%c🎉 Finished!", "font-size:16px; font-weight:bold; color:#17BF63");
